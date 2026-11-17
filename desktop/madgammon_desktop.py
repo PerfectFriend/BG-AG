@@ -2892,11 +2892,10 @@ class MadGammonWindow(QMainWindow):
         self.radio_dialog.activateWindow()
 
     def _open_avs_screensaver(self):
-        log.info("Opening AVS Screensaver (F11)")
+        log.info("Toggling AVS Screensaver (F11)")
         if self.radio_dialog is None:
             self.radio_dialog = RadioDialog(self.radio_player, parent=self)
-        self.radio_dialog.show()
-        self.radio_dialog._toggle_fullscreen_screensaver()
+        self.radio_dialog.avs_widget.toggle_fullscreen_screensaver()
 
     def _open_tg_channel_dialog(self):
         log.info("Opening Telegram Channel Player")

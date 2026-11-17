@@ -725,6 +725,112 @@ def get_default_presets() -> List[AVSPreset]:
 
 
 # ─── 6. AVS CANVAS & SCREENSAVER WIDGET ───
+class AVSScreensaverWindow(QDialog):
+    """
+    Dedicated fullscreen screensaver window for Winamp AVS.
+    Guarantees clean exit on F11, Escape, Space, or double-click.
+    """
+    def __init__(self, master_widget: 'AVSCanvasWidget', parent=None):
+        super().__init__(parent)
+        self.master = master_widget
+        self.setWindowTitle("Winamp AVS Screensaver")
+        self.setWindowFlags(
+            Qt.WindowType.Window |
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint
+        )
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        self.setStyleSheet("background: #000000;")
+        self.setCursor(Qt.CursorShape.BlankCursor)
+        self.setMouseTracking(True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Clone canvas widget for full-screen rendering
+        self.canvas = AVSCanvasWidget(self)
+        self.canvas.is_fullscreen_screensaver = True
+        self.canvas.presets = self.master.presets
+        self.canvas.current_preset_idx = self.master.current_preset_idx
+        self.canvas.is_playing = self.master.is_playing
+        self.canvas.station_title = self.master.station_title
+        self.canvas.auto_cycle_presets = self.master.auto_cycle_presets
+        layout.addWidget(self.canvas)
+
+        # Install event filter on canvas to catch all key/mouse events
+        self.canvas.installEventFilter(self)
+
+        # Keyboard shortcuts explicitly bound to this window
+        QShortcut(QKeySequence("F11"), self, self.close)
+        QShortcut(QKeySequence("Escape"), self, self.close)
+        QShortcut(QKeySequence("Q"), self, self.close)
+
+    def eventFilter(self, obj, event):
+        # Intercept events from canvas
+        if event.type() == event.Type.KeyPress:
+            if event.key() in (Qt.Key.Key_F11, Qt.Key.Key_Escape, Qt.Key.Key_Q):
+                self.close()
+                return True
+            elif event.key() in (Qt.Key.Key_BracketLeft, Qt.Key.Key_PageUp, Qt.Key.Key_Left, Qt.Key.Key_P):
+                self.canvas.prev_preset()
+                self.master.current_preset_idx = self.canvas.current_preset_idx
+                return True
+            elif event.key() in (Qt.Key.Key_BracketRight, Qt.Key.Key_PageDown, Qt.Key.Key_Right, Qt.Key.Key_N):
+                self.canvas.next_preset()
+                self.master.current_preset_idx = self.canvas.current_preset_idx
+                return True
+            elif event.key() in (Qt.Key.Key_R,):
+                import random
+                if self.canvas.presets:
+                    rnd = random.randint(0, len(self.canvas.presets) - 1)
+                    self.canvas.set_preset_by_index(rnd)
+                    self.master.current_preset_idx = rnd
+                return True
+            elif event.key() == Qt.Key.Key_A:
+                self.canvas.auto_cycle_presets = not self.canvas.auto_cycle_presets
+                self.master.auto_cycle_presets = self.canvas.auto_cycle_presets
+                return True
+        elif event.type() == event.Type.MouseButtonDblClick:
+            self.close()
+            return True
+        elif event.type() == event.Type.MouseMove:
+            # Show cursor briefly on mouse move
+            self.unsetCursor()
+        return super().eventFilter(obj, event)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key in (Qt.Key.Key_F11, Qt.Key.Key_Escape, Qt.Key.Key_Q):
+            self.close()
+        elif key in (Qt.Key.Key_BracketLeft, Qt.Key.Key_PageUp, Qt.Key.Key_Left, Qt.Key.Key_P):
+            self.canvas.prev_preset()
+            self.master.current_preset_idx = self.canvas.current_preset_idx
+        elif key in (Qt.Key.Key_BracketRight, Qt.Key.Key_PageDown, Qt.Key.Key_Right, Qt.Key.Key_N):
+            self.canvas.next_preset()
+            self.master.current_preset_idx = self.canvas.current_preset_idx
+        elif key in (Qt.Key.Key_R,):
+            import random
+            if self.canvas.presets:
+                rnd = random.randint(0, len(self.canvas.presets) - 1)
+                self.canvas.set_preset_by_index(rnd)
+                self.master.current_preset_idx = rnd
+        elif key == Qt.Key.Key_A:
+            self.canvas.auto_cycle_presets = not self.canvas.auto_cycle_presets
+            self.master.auto_cycle_presets = self.canvas.auto_cycle_presets
+        else:
+            super().keyPressEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        self.close()
+
+    def closeEvent(self, event):
+        self.master.current_preset_idx = self.canvas.current_preset_idx
+        self.master.auto_cycle_presets = self.canvas.auto_cycle_presets
+        self.master._screensaver_dialog = None
+        self.master.fullscreen_toggled.emit(False)
+        super().closeEvent(event)
+
+
 class AVSCanvasWidget(QWidget):
     """
     High-performance 60 FPS Canvas rendering the active Winamp AVS component stack.
@@ -760,9 +866,7 @@ class AVSCanvasWidget(QWidget):
 
         # Screensaver mode state
         self.is_fullscreen_screensaver = False
-        self._prev_parent = None
-        self._prev_flags = None
-        self._prev_geo = None
+        self._screensaver_dialog: Optional[AVSScreensaverWindow] = None
 
         # 60 FPS animation timer
         self.anim_timer = QTimer(self)
@@ -775,7 +879,10 @@ class AVSCanvasWidget(QWidget):
 
     @property
     def current_preset(self) -> AVSPreset:
-        return self.presets[self.current_preset_idx]
+        if not self.presets:
+            return AVSPreset("Default", "", [])
+        idx = max(0, min(len(self.presets) - 1, self.current_preset_idx))
+        return self.presets[idx]
 
     def set_playing_state(self, playing: bool, station_name: Optional[str] = None):
         self.is_playing = playing
@@ -790,39 +897,33 @@ class AVSCanvasWidget(QWidget):
             self.update()
 
     def next_preset(self):
+        if not self.presets:
+            return
         next_idx = (self.current_preset_idx + 1) % len(self.presets)
         self.set_preset_by_index(next_idx)
 
     def prev_preset(self):
+        if not self.presets:
+            return
         prev_idx = (self.current_preset_idx - 1) % len(self.presets)
         self.set_preset_by_index(prev_idx)
 
     def toggle_fullscreen_screensaver(self):
-        """Toggles true fullscreen screensaver display mode."""
-        self.is_fullscreen_screensaver = not self.is_fullscreen_screensaver
+        """Toggles true fullscreen screensaver display mode via dedicated overlay."""
         if self.is_fullscreen_screensaver:
-            self.setWindowFlag(Qt.WindowType.Window, True)
-            self.showFullScreen()
-            self.activateWindow()
-            self.setCursor(Qt.CursorShape.BlankCursor)  # Hide mouse cursor in screensaver
-        else:
-            self.setWindowFlag(Qt.WindowType.Window, False)
-            self.showNormal()
-            self.unsetCursor()
-        self.fullscreen_toggled.emit(self.is_fullscreen_screensaver)
+            if self.parent() and hasattr(self.parent(), 'close'):
+                self.parent().close()
+            return
 
-    def keyPressEvent(self, event):
-        if event.key() in (Qt.Key.Key_F11, Qt.Key.Key_F):
-            self.toggle_fullscreen_screensaver()
-        elif event.key() == Qt.Key.Key_Escape:
-            if self.is_fullscreen_screensaver:
-                self.toggle_fullscreen_screensaver()
-        elif event.key() in (Qt.Key.Key_Right, Qt.Key.Key_N, Qt.Key.Key_Space):
-            self.next_preset()
-        elif event.key() in (Qt.Key.Key_Left, Qt.Key.Key_P):
-            self.prev_preset()
+        if self._screensaver_dialog is not None:
+            self._screensaver_dialog.close()
+            self._screensaver_dialog = None
+            self.fullscreen_toggled.emit(False)
         else:
-            super().keyPressEvent(event)
+            self._screensaver_dialog = AVSScreensaverWindow(self)
+            self._screensaver_dialog.showFullScreen()
+            self._screensaver_dialog.activateWindow()
+            self.fullscreen_toggled.emit(True)
 
     def mouseDoubleClickEvent(self, event):
         self.toggle_fullscreen_screensaver()
@@ -919,21 +1020,20 @@ class AVSCanvasWidget(QWidget):
 
     def keyPressEvent(self, event):
         key = event.key()
-        if key in (Qt.Key.Key_BracketLeft, Qt.Key.Key_PageUp):
+        if key in (Qt.Key.Key_F11, Qt.Key.Key_Escape, Qt.Key.Key_Q):
+            self.toggle_fullscreen_screensaver()
+        elif key in (Qt.Key.Key_BracketLeft, Qt.Key.Key_PageUp, Qt.Key.Key_Left, Qt.Key.Key_P):
             self.prev_preset()
-        elif key in (Qt.Key.Key_BracketRight, Qt.Key.Key_PageDown):
+        elif key in (Qt.Key.Key_BracketRight, Qt.Key.Key_PageDown, Qt.Key.Key_Right, Qt.Key.Key_N):
             self.next_preset()
-        elif key in (Qt.Key.Key_R, Qt.Key.Key_N):
+        elif key in (Qt.Key.Key_R,):
             import random
-            rnd_idx = random.randint(0, len(self.presets) - 1)
-            self.set_preset_by_index(rnd_idx)
+            if self.presets:
+                rnd_idx = random.randint(0, len(self.presets) - 1)
+                self.set_preset_by_index(rnd_idx)
         elif key == Qt.Key.Key_A:
             self.auto_cycle_presets = not self.auto_cycle_presets
             self.update()
-        elif key == Qt.Key.Key_F11:
-            self.toggle_fullscreen_screensaver()
-        elif key == Qt.Key.Key_Escape and self.is_fullscreen_screensaver:
-            self.toggle_fullscreen_screensaver()
         else:
             super().keyPressEvent(event)
 
