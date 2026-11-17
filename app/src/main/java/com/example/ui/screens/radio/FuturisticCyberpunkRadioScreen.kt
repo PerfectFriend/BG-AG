@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.audio.RadioChannel
 import com.example.ui.GameViewModel
+import com.example.ui.avs.AvsVisualizerView
+import com.example.ui.avs.AvsFullscreenDialog
 import kotlin.math.sin
 
 // Cyberpunk Palette
@@ -76,6 +78,7 @@ fun FuturisticCyberpunkRadioScreen(
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Telegram, 1 = Live Radio, 2 = Local Tracks
     var channelInput by remember { mutableStateOf(radio.currentTelegramChannel) }
     var stationLangFilter by remember { mutableStateOf("ALL") }
+    var showAvsFullscreen by remember { mutableStateOf(false) }
 
     val folderLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
@@ -249,69 +252,56 @@ fun FuturisticCyberpunkRadioScreen(
                         )
                     }
 
-                    // Track Title Marquee
-                    Text(
-                        text = if (isLoading) ">>> БУФЕРИЗАЦИЯ ПОТОКА ДАННЫХ <<<" else activeTitle,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Black,
-                        color = if (isPlaying) CyberNeonGreen else Color.White,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    // Real-time Canvas Animated Audio Frequency Visualizer (24 bars)
-                    Canvas(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
+                    // Track Title Marquee & Fullscreen AVS Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val barCount = 28
-                        val barWidth = size.width / barCount
-                        val maxHeight = size.height
+                        Text(
+                            text = if (isLoading) ">>> БУФЕРИЗАЦИЯ ПОТОКА ДАННЫХ <<<" else activeTitle,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Black,
+                            color = if (isPlaying) CyberNeonGreen else Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
 
-                        for (i in 0 until barCount) {
-                            val wave1 = sin(visualizerPhase + i * 0.4f)
-                            val wave2 = sin(visualizerPhase * 1.8f + i * 0.7f)
-                            val rawAmp = (wave1 + wave2 + 2f) / 4f
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                            val currentAmp = if (isPlaying) {
-                                (0.15f + rawAmp * 0.8f).coerceIn(0.08f, 1.0f)
-                            } else {
-                                0.06f
-                            }
-
-                            val barHeight = maxHeight * currentAmp
-                            val barX = i * barWidth + barWidth * 0.15f
-                            val barActualWidth = barWidth * 0.7f
-
-                            val brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    CyberNeonGreen,
-                                    CyberCyan,
-                                    CyberDarkSurface
-                                ),
-                                startY = maxHeight - barHeight,
-                                endY = maxHeight
+                        // Fullscreen AVS Pill
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color(0xFF0A2218))
+                                .border(1.dp, CyberNeonGreen, RoundedCornerShape(4.dp))
+                                .clickable { showAvsFullscreen = true }
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "📺 FULLSCREEN",
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CyberNeonGreen
                             )
-
-                            drawRoundRect(
-                                brush = brush,
-                                topLeft = Offset(barX, maxHeight - barHeight),
-                                size = Size(barActualWidth, barHeight),
-                                cornerRadius = CornerRadius(2f, 2f)
-                            )
-
-                            // Peak dot
-                            if (isPlaying) {
-                                drawCircle(
-                                    color = if (i % 3 == 0) CyberAmber else CyberNeonGreen,
-                                    radius = 1.5f,
-                                    center = Offset(barX + barActualWidth / 2f, (maxHeight - barHeight - 4f).coerceAtLeast(2f))
-                                )
-                            }
                         }
                     }
+
+                    // Hardware-accelerated Winamp AVS Visualizer View
+                    AvsVisualizerView(
+                        audioSessionId = radio.audioSessionId,
+                        isPlaying = isPlaying,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(96.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .border(1.dp, CyberBorder, RoundedCornerShape(6.dp)),
+                        onToggleFullscreen = { showAvsFullscreen = true }
+                    )
 
                     // Bottom stream diagnostics
                     Row(
@@ -424,6 +414,14 @@ fun FuturisticCyberpunkRadioScreen(
                 isLoading = isLoading
             )
         }
+    }
+
+    if (showAvsFullscreen) {
+        AvsFullscreenDialog(
+            audioSessionId = radio.audioSessionId,
+            isPlaying = isPlaying,
+            onDismiss = { showAvsFullscreen = false }
+        )
     }
 }
 

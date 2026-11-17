@@ -53,6 +53,9 @@ class RadioManager(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var onionBridge: OnionStreamBridge? = null
     
+    var audioSessionId: Int by mutableStateOf(0)
+        private set
+    
     // Default channels with stable streaming URLs classified by language
     val defaultChannels = listOf(
         // RU - Русский
@@ -543,6 +546,7 @@ class RadioManager(private val context: Context) {
                     mainHandler.post {
                         this@RadioManager.isLoading = false
                         this@RadioManager.isPlaying = true
+                        this@RadioManager.audioSessionId = it.audioSessionId
                         this@RadioManager.errorMessage = null
                     }
                     try {
@@ -556,6 +560,7 @@ class RadioManager(private val context: Context) {
                     mainHandler.post {
                         this@RadioManager.isLoading = false
                         this@RadioManager.isPlaying = false
+                        this@RadioManager.audioSessionId = 0
                         this@RadioManager.errorMessage = "Error playing radio ($what, $extra). Try another station or URL."
                     }
                     true
@@ -614,6 +619,7 @@ class RadioManager(private val context: Context) {
                     mainHandler.post {
                         this@RadioManager.isLoading = false
                         this@RadioManager.isPlaying = true
+                        this@RadioManager.audioSessionId = it.audioSessionId
                         this@RadioManager.errorMessage = null
                     }
                     try {
@@ -626,6 +632,7 @@ class RadioManager(private val context: Context) {
                     mainHandler.post {
                         this@RadioManager.isLoading = false
                         this@RadioManager.isPlaying = false
+                        this@RadioManager.audioSessionId = 0
                         this@RadioManager.errorMessage = "Error playing track ($what, $extra)."
                     }
                     true
@@ -683,6 +690,7 @@ class RadioManager(private val context: Context) {
     fun stop() {
         isLoading = false
         isPlaying = false
+        audioSessionId = 0
         try {
             mediaPlayer?.let {
                 if (it.isPlaying) {
@@ -811,6 +819,7 @@ class RadioManager(private val context: Context) {
                     mainHandler.post {
                         this@RadioManager.isLoading = false
                         this@RadioManager.isPlaying = true
+                        this@RadioManager.audioSessionId = it.audioSessionId
                         this@RadioManager.errorMessage = null
                     }
                     try {
@@ -823,6 +832,7 @@ class RadioManager(private val context: Context) {
                     mainHandler.post {
                         this@RadioManager.isLoading = false
                         this@RadioManager.isPlaying = false
+                        this@RadioManager.audioSessionId = 0
                         this@RadioManager.errorMessage = "Channel temporarily unavailable. Attempting auto-switch."
                     }
                     true

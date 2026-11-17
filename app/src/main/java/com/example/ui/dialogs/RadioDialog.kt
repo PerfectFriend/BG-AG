@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.ui.GameViewModel
+import com.example.ui.avs.AvsFullscreenDialog
 
 /**
  * Диалог встроенного аудиоплеера и интернет-радиоприёмника:
@@ -48,6 +49,7 @@ fun RadioDialog(viewModel: GameViewModel, onDismiss: () -> Unit) {
     var activePlayerTab by remember { mutableIntStateOf(0) } // 0 = Radio, 1 = Local Music, 2 = TG Channel
     var customName by remember { mutableStateOf("") }
     var customUrl by remember { mutableStateOf("") }
+    var showAvsFullscreen by remember { mutableStateOf(false) }
     val radioSettings = viewModel.radioManager
 
     val folderLauncher = rememberLauncherForActivityResult(
@@ -157,6 +159,22 @@ fun RadioDialog(viewModel: GameViewModel, onDismiss: () -> Unit) {
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                    IconButton(
+                        onClick = { showAvsFullscreen = true },
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF0F261F))
+                    ) {
+                        Text(
+                            text = "AVS",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Black,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            color = Color(0xFF00FFCC)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
                     IconButton(
                         onClick = { radioSettings.togglePlay() },
                         modifier = Modifier.size(24.dp)
@@ -353,5 +371,13 @@ fun RadioDialog(viewModel: GameViewModel, onDismiss: () -> Unit) {
                 }
             }
         }
+    }
+
+    if (showAvsFullscreen) {
+        AvsFullscreenDialog(
+            audioSessionId = radioSettings.audioSessionId,
+            isPlaying = radioSettings.isPlaying,
+            onDismiss = { showAvsFullscreen = false }
+        )
     }
 }
