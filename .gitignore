@@ -30,20 +30,8 @@ app/build/
 *.apk.part_*
 *.aab
 
-# Compiled native libs (desktop)
-desktop/*.so
-desktop/logs/
-
 # Rust build artifacts
 **/target/
-
-# Python cache
-__pycache__/
-*.pyc
-
-# Local app data
-.madgammon_data/
-
 
 # APK signing artifacts
 *.idsig
