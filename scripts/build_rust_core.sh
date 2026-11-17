@@ -15,6 +15,23 @@ KOTLIN_BINDINGS_DIR="$ROOT_DIR/app/src/main/java/uniffi/madgammon_core"
 
 echo "==> [MadGammon Core] Starting Rust build pipeline..."
 
+# Auto-detect ANDROID_NDK_HOME if not explicitly set
+if [[ -z "${ANDROID_NDK_HOME:-}" ]]; then
+    for ndk_candidate in \
+        "${ANDROID_HOME:-$HOME/Android/Sdk}/ndk" \
+        "/opt/android-sdk/ndk" \
+        "$HOME/Android/Sdk/ndk"; do
+        if [[ -d "$ndk_candidate" ]]; then
+            latest_ndk="$(find "$ndk_candidate" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -V | tail -n 1)"
+            if [[ -n "$latest_ndk" && -d "$latest_ndk" ]]; then
+                export ANDROID_NDK_HOME="$latest_ndk"
+                echo "==> Auto-detected ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+                break
+            fi
+        fi
+    done
+fi
+
 # Check cargo
 if ! command -v cargo &> /dev/null; then
     echo "Error: cargo is not installed or not in PATH."
