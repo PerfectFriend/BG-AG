@@ -240,6 +240,10 @@ class FoxrayVpnService : VpnService(), Runnable {
 
             val fd = vpnInterface!!.fd
             val nativeHev = java.io.File(applicationInfo.nativeLibraryDir, "libhev-socks5-tunnel.so")
+            try {
+                nativeHev.setExecutable(true, true)
+            } catch (_: Exception) {}
+            var nativeHevStarted = false
             if (nativeHev.exists() && nativeHev.canExecute()) {
                 val tproxyConfigFile = java.io.File(filesDir, "tproxy.yml")
                 val tproxyYaml = """
@@ -256,19 +260,35 @@ class FoxrayVpnService : VpnService(), Runnable {
                 try {
                     val pb = ProcessBuilder(nativeHev.absolutePath, tproxyConfigFile.absolutePath, fd.toString())
                     pb.redirectErrorStream(true)
-                    hevProcess = pb.start()
+                    val proc = pb.start()
+                    hevProcess = proc
+                    nativeHevStarted = true
+                    Thread({
+                        try {
+                            val reader = proc.inputStream.bufferedReader()
+                            var line = reader.readLine()
+                            while (line != null) {
+                                Log.d("hev-socks5-tunnel", line)
+                                line = reader.readLine()
+                            }
+                        } catch (_: Exception) {}
+                    }, "HevLogReader").start()
                 } catch (e: Exception) {
                     Log.w("FoxrayVpnService", "hev process start exception, falling back: ${e.message}")
+                    nativeHevStarted = false
                 }
-            } else if (NativeNetworkBridge.isTun2SocksAvailable) {
-                Log.i("FoxrayVpnService", "Engaging Native JNI libtun2socks.so engine (fd=$fd)...")
-                NativeNetworkBridge.startTun2Socks(fd, "127.0.0.1", 10808)
-            } else {
-                val router = Tun2SocksPacketRouter(vpnInterface!!, "127.0.0.1", 10808) { logLine ->
-                    Log.d("FoxrayVpnService", logLine)
+            }
+            if (!nativeHevStarted) {
+                if (NativeNetworkBridge.isTun2SocksAvailable) {
+                    Log.i("FoxrayVpnService", "Engaging Native JNI libtun2socks.so engine (fd=$fd)...")
+                    NativeNetworkBridge.startTun2Socks(fd, "127.0.0.1", 10808)
+                } else {
+                    val router = Tun2SocksPacketRouter(vpnInterface!!, "127.0.0.1", 10808) { logLine ->
+                        Log.d("FoxrayVpnService", logLine)
+                    }
+                    tunPacketRouter = router
+                    Thread(router, "Tun2SocksRouterThread").start()
                 }
-                tunPacketRouter = router
-                Thread(router, "Tun2SocksRouterThread").start()
             }
             
             // Active lifecycle loop

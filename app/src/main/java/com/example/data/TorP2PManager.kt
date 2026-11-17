@@ -10,6 +10,7 @@ import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.Socket
 import kotlin.concurrent.thread
+import kotlinx.coroutines.runBlocking
 
 /**
  * Manages real peer-to-peer TCP communication over the Tor network and local LAN/VPN.
@@ -100,8 +101,21 @@ class TorP2PManager(
                     val proxyClient = TorProxyClient(socksHost, socksPort)
                     proxyClient.connectThroughTor(targetHost, targetPort)
                 } else {
-                    onLog("[P2P LAN] Connecting directly to peer $targetHost:$targetPort...")
-                    Socket(targetHost, targetPort)
+                    onLog("[P2P MultiPath] Racing Direct / V2Ray / Tor pathways to $targetHost:$targetPort...")
+                    try {
+                        runBlocking {
+                            val race = MultiPathTransportRacer.raceConnection(
+                                targetHost = targetHost,
+                                targetPort = targetPort,
+                                torSocksPort = socksPort
+                            )
+                            onLog("[P2P MultiPath] Connected via ${race.transportType} in ${race.rttMillis}ms!")
+                            race.socket
+                        }
+                    } catch (e: Exception) {
+                        onLog("[P2P MultiPath] MultiPath race failed (${e.message}), trying direct socket fallback...")
+                        Socket(targetHost, targetPort)
+                    }
                 }
                 connectedPeerAddress = targetHost
                 onLog("[P2P] Connected to remote host $targetHost:$targetPort successfully!")

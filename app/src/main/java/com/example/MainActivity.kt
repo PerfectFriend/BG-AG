@@ -93,6 +93,21 @@ class MainActivity : ComponentActivity() {
             } else {
                 // VPN is already authorized/prepared
             }
+            checkAndRequestBatteryOptimization()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun checkAndRequestBatteryOptimization() {
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
