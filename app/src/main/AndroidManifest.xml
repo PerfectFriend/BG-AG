@@ -23,7 +23,7 @@
     <attribution android:tag="radio_attribution" android:label="@string/attribution_radio_label" />
 
     <application
-        android:name=".MyApplication"
+        android:name="com.example.MyApplication"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -34,7 +34,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.MainActivity"
             android:exported="true"
             android:configChanges="orientation|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:theme="@style/Theme.MyApplication">
@@ -45,7 +45,7 @@
 
         <activity-alias
             android:name=".MainActivityAliasGame"
-            android:targetActivity=".MainActivity"
+            android:targetActivity="com.example.MainActivity"
             android:label="@string/app_name_game"
             android:icon="@mipmap/ic_launcher_game"
             android:roundIcon="@mipmap/ic_launcher_game_round"
@@ -59,7 +59,7 @@
 
         <activity-alias
             android:name=".MainActivityAliasMessenger"
-            android:targetActivity=".MainActivity"
+            android:targetActivity="com.example.MainActivity"
             android:label="@string/app_name_messenger"
             android:icon="@mipmap/ic_launcher_messenger"
             android:roundIcon="@mipmap/ic_launcher_messenger_round"
@@ -72,7 +72,7 @@
         </activity-alias>
         
         <service
-            android:name=".service.FoxrayVpnService"
+            android:name="com.example.service.FoxrayVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:foregroundServiceType="specialUse"
             android:attributionTags="vpn_attribution"
@@ -86,7 +86,7 @@
         </service>
 
         <service
-            android:name=".service.SimpleXPushService"
+            android:name="com.example.service.SimpleXPushService"
             android:foregroundServiceType="specialUse"
             android:exported="false">
             <property

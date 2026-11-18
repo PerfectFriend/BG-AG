@@ -66,20 +66,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Debug APK
+      - name: Run Unit Tests
         run: |
           chmod +x gradlew
+          ./gradlew testDebugUnitTest --tests "com.example.crypto.*" --tests "com.example.data.*" --tests "com.example.ui.avs.*" --tests "com.example.model.*" --no-daemon
+
+      - name: Build Debug APK
+        run: |
           ./gradlew assembleDebug --no-daemon
 
-      - name: Package & Split APK for Cloud Run Distribution
-        run: |
-          chmod +x scripts/distribute_apk_chunks.sh
-          ./scripts/distribute_apk_chunks.sh
-
-      - name: Upload Final APK Chunks
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: madgammon-apk-package
-          path: |
-            MadGammon.apk
-            MadGammon.apk.part_*
+          name: madgammon-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk

@@ -13,15 +13,15 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "org.madgammon"
   compileSdk { version = release(36) }
 
   defaultConfig {
     applicationId = "org.madgammon.app"
     minSdk = 24
     targetSdk = 35
-    versionCode = 6
-    versionName = "0.3.0-rc1"
+    versionCode = 7
+    versionName = "0.9.0-rc2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -57,8 +57,12 @@ android {
   buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
-      isShrinkResources = false
+      isMinifyEnabled = true
+      isShrinkResources = true
+      proguardFiles(
+        getDefaultProguardFile("proguard-android-optimize.txt"),
+        "proguard-rules.pro"
+      )
       signingConfig = signingConfigs.getByName("releaseConfig")
     }
     debug {

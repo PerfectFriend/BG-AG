@@ -44,7 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.example.R
+import org.madgammon.R
 import com.example.data.Bip39Helper
 import com.example.data.CryptoIdentity
 import com.example.data.PdfPassportGenerator

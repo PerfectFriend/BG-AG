@@ -1,26 +1,53 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# -----------------------------------------------------------------------------
+# MadGammon ProGuard / R8 Production Hardening Rules
+# -----------------------------------------------------------------------------
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve line numbers and essential attributes for debuggable stack traces
+-keepattributes SourceFile,LineNumberTable,InnerClasses,EnclosingMethod,Signature,*Annotation*
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# Standard ProGuard/R8 rules for OkHttp / BouncyCastle / Conscrypt
+# --- BouncyCastle Cryptographic Provider ---
+-dontwarn org.bouncycastle.**
 -dontwarn org.conscrypt.**
--dontwarn org.bouncycastle.jsse.**
 -dontwarn org.openjsse.**
--dontwarn okhttp3.internal.platform.**
--dontwarn javax.annotation.**
+-keep class org.bouncycastle.** { *; }
+-keep interface org.bouncycastle.** { *; }
+-keepclassmembers class org.bouncycastle.** { *; }
+
+# --- UniFFI Rust Native Bindings ---
+-keep class uniffi.** { *; }
+-keepclassmembers class uniffi.** { *; }
+-dontwarn uniffi.**
+
+# --- Native JNI Methods ---
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# --- Project Cryptographic and Data Models ---
 -keep class com.example.model.** { *; }
+-keepclassmembers class com.example.model.** { *; }
 -keep class com.example.data.** { *; }
+-keepclassmembers class com.example.data.** { *; }
+-keep class com.example.crypto.** { *; }
+-keepclassmembers class com.example.crypto.** { *; }
+-keep class com.example.service.** { *; }
+
+# --- AndroidX Room / SQLite Database ---
+-dontwarn androidx.room.paging.**
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-keep @androidx.room.Dao class * { *; }
+
+# --- OkHttp, WebSocket and Okio Network Stack ---
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+
+# --- Kotlin Coroutines & Reflection ---
+-dontwarn kotlinx.coroutines.**
+-keep class kotlinx.coroutines.** { *; }
+
+# --- Jetpack Compose Runtime ---
+-keep class androidx.compose.runtime.** { *; }

@@ -127,7 +127,7 @@ fun RomanticBackgammonSplashScreen(
     ) {
         // High-Resolution Background Splash Art
         Image(
-            painter = painterResource(id = com.example.R.drawable.img_backgammon_splash_1789082059077),
+            painter = painterResource(id = org.madgammon.R.drawable.img_backgammon_splash_1789082059077),
             contentDescription = "$appTitle Splash Background",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
