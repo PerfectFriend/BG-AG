@@ -423,9 +423,9 @@ fun RegisteredUserPinDialog(
 
                     Text(
                         text = if (lang == "RU")
-                            "Введите вашу seed-фразу из 12 слов BIP-39 для разблокировки и сброса 48-часового таймера:"
+                            "Введите вашу seed-фразу из 24 слов BIP-39 для разблокировки и сброса 48-часового таймера:"
                         else
-                            "Enter your 12-word BIP-39 seed phrase to unlock and reset the 48-hour panic timer:",
+                            "Enter your 24-word BIP-39 seed phrase to unlock and reset the 48-hour panic timer:",
                         fontSize = 11.sp,
                         color = Color.LightGray,
                         lineHeight = 15.sp,
@@ -435,7 +435,7 @@ fun RegisteredUserPinDialog(
                     OutlinedTextField(
                         value = seedRecoveryText,
                         onValueChange = { seedRecoveryText = it; recoveryError = "" },
-                        label = { Text(if (lang == "RU") "12 слов seed-фразы" else "12-word seed phrase", fontSize = 11.sp) },
+                        label = { Text(if (lang == "RU") "24 слова seed-фразы" else "24-word seed phrase", fontSize = 11.sp) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF00E676),
                             unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
@@ -572,9 +572,9 @@ fun RegisteredUserPinDialog(
                                 )
                                 Text(
                                     text = if (lang == "RU")
-                                        "Вход возможен ТОЛЬКО через восстановление по seed-фразе из 12 слов."
+                                        "Вход возможен ТОЛЬКО через восстановление по seed-фразе из 24 слов."
                                     else
-                                        "Access is ONLY possible by restoring with your 12-word seed phrase.",
+                                        "Access is ONLY possible by restoring with your 24-word seed phrase.",
                                     fontSize = 10.5.sp,
                                     color = Color.LightGray
                                 )

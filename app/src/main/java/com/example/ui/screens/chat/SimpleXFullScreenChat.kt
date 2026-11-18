@@ -3888,7 +3888,7 @@ fun SimpleXFullScreenChat(
                         OutlinedTextField(
                             value = importSeedPhraseText,
                             onValueChange = { importSeedPhraseText = it },
-                            placeholder = { Text("anchor beacon crypto ... (12 words)", fontSize = 10.sp, color = Color.Gray) },
+                            placeholder = { Text("anchor beacon crypto ... (24 words)", fontSize = 10.sp, color = Color.Gray) },
                             label = { Text(if (lang == "RU") "Обязательная Сид-фраза" else "Required Seed Phrase", fontSize = 10.sp) },
                             textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = Color.White),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -3999,7 +3999,7 @@ fun SimpleXFullScreenChat(
 
                     // 1. Seed Mnemonic Field
                     Text(
-                        text = if (lang == "RU") "🔑 СИД-ФРАЗА (12 слов):" else "🔑 SEED PHRASE (12 words):",
+                        text = if (lang == "RU") "🔑 СИД-ФРАЗА (24 слова):" else "🔑 SEED PHRASE (24 words):",
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 11.sp

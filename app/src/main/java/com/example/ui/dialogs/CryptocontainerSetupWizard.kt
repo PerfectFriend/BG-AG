@@ -420,7 +420,7 @@ fun CryptocontainerSetupWizard(viewModel: GameViewModel, onDismiss: () -> Unit) 
                             text = if (lang == "RU") {
                                 "Ниже показана ваша уникальная мнемоническая сид-фраза BIP-39. С её помощью шифруется криптоконтейнер и обеспечивается полное восстановление вашего аккаунта. Обязательно запишите её в безопасном месте!"
                             } else {
-                                "Below is your unique standard BIP-39 mnemonic phrase. It encrypts your container and guarantees full account recovery. Write these 12 words down in order!"
+                                "Below is your unique standard BIP-39 mnemonic phrase. It encrypts your container and guarantees full account recovery. Write these 24 words down in order!"
                             },
                             color = Color.Gray,
                             fontSize = 11.sp,
@@ -513,7 +513,7 @@ fun CryptocontainerSetupWizard(viewModel: GameViewModel, onDismiss: () -> Unit) 
                                 text = if (lang == "RU") {
                                     "Я надежно сохранил сид-фразу и понимаю, что без нее восстановить доступ к своему криптоконтейнеру будет невозможно."
                                 } else {
-                                    "I have securely saved my seed phrase and understand that recovery is impossible without these 12 words."
+                                    "I have securely saved my seed phrase and understand that recovery is impossible without these 24 words."
                                 },
                                 color = if (hasConfirmedMnemonicBackup) Color.White else Color.Gray,
                                 fontSize = 10.sp,
@@ -606,9 +606,9 @@ fun CryptocontainerSetupWizard(viewModel: GameViewModel, onDismiss: () -> Unit) 
 
                     Text(
                         text = if (lang == "RU") {
-                            "Введите вашу резервную сид-фразу из 12 слов. Если у вас также есть полный Base64-код резервной копии, вы можете развернуть настройки напрямую:"
+                            "Введите вашу резервную сид-фразу из 24 слов. Если у вас также есть полный Base64-код резервной копии, вы можете развернуть настройки напрямую:"
                         } else {
-                            "Enter your 12-word seed mnemonic phrase. If you also possess the complete Base64 backup payload, you can paste it directly to construct state:"
+                            "Enter your 24-word seed mnemonic phrase. If you also possess the complete Base64 backup payload, you can paste it directly to construct state:"
                         },
                         color = Color.Gray,
                         fontSize = 11.sp,
@@ -624,8 +624,8 @@ fun CryptocontainerSetupWizard(viewModel: GameViewModel, onDismiss: () -> Unit) 
                         readOnly = viewModel.isNoGameModeEnabled,
                         singleLine = false,
                         maxLines = 6,
-                        placeholder = { Text("anchor beacon crypto ... (12 words)", color = Color.Gray, fontSize = 12.sp) },
-                        label = { Text(if (lang == "RU") "Сид-фраза из 12 слов (каждое слово видно)" else "12-word Seed Phrase (fully visible)", fontSize = 12.sp) },
+                        placeholder = { Text("anchor beacon crypto ... (24 words)", color = Color.Gray, fontSize = 12.sp) },
+                        label = { Text(if (lang == "RU") "Сид-фраза из 24 слов (каждое слово видно)" else "24-word Seed Phrase (fully visible)", fontSize = 12.sp) },
                         textStyle = androidx.compose.ui.text.TextStyle(fontSize = 15.sp, fontFamily = FontFamily.Monospace, color = Color.White),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -680,9 +680,9 @@ fun CryptocontainerSetupWizard(viewModel: GameViewModel, onDismiss: () -> Unit) 
                             val seed = restoreSeedPhrase.trim()
                             if (!Bip39Helper.validateMnemonic(context, seed)) {
                                 restoreStatusError = if (lang == "RU") {
-                                    "Некорректная сид-фраза BIP-39! Проверьте правильность написания слов и их порядок (должно быть ровно 12 слов из официального словаря с верной контрольной суммой)."
+                                    "Некорректная сид-фраза BIP-39! Проверьте правильность написания слов и их порядок (должно быть ровно 24 слова из официального словаря с верной контрольной суммой)."
                                 } else {
-                                    "Invalid BIP-39 seed phrase! Check spelling, order, and ensure it consists of exactly 12 standard words with correct checksum."
+                                    "Invalid BIP-39 seed phrase! Check spelling, order, and ensure it consists of exactly 24 standard words with correct checksum."
                                 }
                             } else {
                                 val success = viewModel.importCryptocontainerWithSeed(seed, restoreContainerBlock.trim())

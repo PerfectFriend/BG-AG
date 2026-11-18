@@ -193,7 +193,7 @@ class GameViewModel(private val context: Context) : ViewModel() {
     fun verifyAndRecoverFromSeedPhrase(seedText: String, newPin: String = ""): Pair<Boolean, String> {
         val normalized = seedText.trim().lowercase().split("\\s+".toRegex()).joinToString(" ")
         if (!Bip39Helper.validateMnemonic(context, normalized)) {
-            return Pair(false, if (selectedLanguage == "RU") "Неверная seed-фраза: проверьте 12 слов и контрольную сумму BIP-39" else "Invalid seed phrase: check 12 words and checksum")
+            return Pair(false, if (selectedLanguage == "RU") "Неверная seed-фраза: проверьте 24 слова и контрольную сумму BIP-39" else "Invalid seed phrase: check 24 words and checksum")
         }
 
         val derived = Bip39Helper.deriveCryptoIdentity(normalized)
@@ -3091,7 +3091,7 @@ class GameViewModel(private val context: Context) : ViewModel() {
     fun restoreProfileFromSeed(name: String, pin: String, panicPin: String = "666666", rawSeed: String): Pair<Boolean, String> {
         val normalized = rawSeed.trim().lowercase().split("\\s+".toRegex()).joinToString(" ")
         if (!Bip39Helper.validateMnemonic(context, normalized)) {
-            return Pair(false, if (selectedLanguage == "RU") "Неверная сид-фраза: проверьте 12 слов и контрольную сумму (BIP-39)" else "Invalid seed phrase: verify 12 words and BIP-39 checksum")
+            return Pair(false, if (selectedLanguage == "RU") "Неверная сид-фраза: проверьте 24 слова и контрольную сумму (BIP-39)" else "Invalid seed phrase: verify 24 words and BIP-39 checksum")
         }
         val identity = Bip39Helper.deriveCryptoIdentity(normalized)
         completeRegistration(name, pin, panicPin, identity)

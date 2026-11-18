@@ -303,7 +303,7 @@ fun OnboardingRegistrationScreen(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("MadGammon BIP39 Seed", identity.seedPhrase)
                                 clipboard.setPrimaryClip(clip)
-                                actionNotification = if (lang == "RU") "📋 Сид-фраза из 12 слов скопирована в буфер!" else "📋 12-word seed phrase copied to clipboard!"
+                                actionNotification = if (lang == "RU") "📋 Сид-фраза из 24 слов скопирована в буфер!" else "📋 24-word seed phrase copied to clipboard!"
                             },
                             onSavePdfClick = {
                                 val pdfFile = PdfPassportGenerator.generatePassportPdf(context, userNameInput, identity)
@@ -1238,9 +1238,9 @@ private fun ProfileSetupStep(
 
         Text(
             text = if (lang == "RU")
-                "🚨 Ввод тревожного PIN-кода мгновенно открывает обычные нарды и запечатывает секретный чат на 48 часов (снятие печати — только по 12 словам)."
+                "🚨 Ввод тревожного PIN-кода мгновенно открывает обычные нарды и запечатывает секретный чат на 48 часов (снятие печати — только по 24 словам)."
             else
-                "🚨 Entering the Panic PIN launches normal backgammon and seals the secret chat for 48 hours (unsealing requires your 12-word seed).",
+                "🚨 Entering the Panic PIN launches normal backgammon and seals the secret chat for 48 hours (unsealing requires your 24-word seed).",
             fontSize = 10.5.sp,
             color = Color(0xFFFFAB91),
             lineHeight = 14.5.sp
@@ -1277,7 +1277,7 @@ private fun ProfileSetupStep(
         OrnateChoiceCard(
             emoji = "🗝️",
             title = if (lang == "RU") "СОЗДАТЬ НОВЫЙ ПАСПОРТ (BIP-39)" else "FORGE NEW PASSPORT (BIP-39)",
-            subtitle = if (lang == "RU") "Генерация 12 заветных слов, копирование в 1 касание и выпуск PDF-паспорта" else "Generate 12 sacred words, 1-tap copy & official PDF passport",
+            subtitle = if (lang == "RU") "Генерация 24 заветных слов, копирование в 1 касание и выпуск PDF-паспорта" else "Generate 24 sacred words, 1-tap copy & official PDF passport",
             accentColor = VaultGold,
             bgGradient = listOf(Color(0xE6422210), Color(0xE62A1428)),
             onClick = onCreateChosen
@@ -1286,8 +1286,8 @@ private fun ProfileSetupStep(
         // Choice 2: Restore Existing Profile
         OrnateChoiceCard(
             emoji = "📜",
-            title = if (lang == "RU") "ВОССТАНОВИТЬ ПО МАНУСКРИПТУ (12 СЛОВ)" else "RESTORE FROM MANUSCRIPT (12 WORDS)",
-            subtitle = if (lang == "RU") "Ввод сохраненной мнемоники из 12 слов и воссоздание ключей" else "Enter your existing 12-word seed phrase & derive vault keys",
+            title = if (lang == "RU") "ВОССТАНОВИТЬ ПО МАНУСКРИПТУ (24 СЛОВА)" else "RESTORE FROM MANUSCRIPT (24 WORDS)",
+            subtitle = if (lang == "RU") "Ввод сохраненной мнемоники из 24 слов и воссоздание ключей" else "Enter your existing 24-word seed phrase & derive vault keys",
             accentColor = VaultTurquoise,
             bgGradient = listOf(Color(0xE6142834), Color(0xE6221632)),
             onClick = onRestoreChosen
@@ -1388,7 +1388,7 @@ private fun CreateBip39SeedStep(
             ) {
                 Text("🗝️", fontSize = 17.sp)
                 Text(
-                    text = if (lang == "RU") "ЗОЛОТОЙ МАНУСКРИПТ (12 СЛОВ)" else "GOLDEN MANUSCRIPT (12 WORDS)",
+                    text = if (lang == "RU") "ЗОЛОТОЙ МАНУСКРИПТ (24 СЛОВА)" else "GOLDEN MANUSCRIPT (24 WORDS)",
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Black,
                     color = VaultGoldLight,
@@ -1440,12 +1440,12 @@ private fun CreateBip39SeedStep(
             }
         }
 
-        // 12 Words Inlaid Mosaic Grid (3 columns x 4 rows)
-        Column(verticalArrangement = Arrangement.spacedBy(4.5.dp)) {
-            for (row in 0 until 4) {
+        // 24 Words Inlaid Mosaic Grid (3 columns x 8 rows)
+        Column(verticalArrangement = Arrangement.spacedBy(3.5.dp)) {
+            for (row in 0 until 8) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.5.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     for (col in 0 until 3) {
                         val index = row * 3 + col
@@ -1453,8 +1453,8 @@ private fun CreateBip39SeedStep(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .shadow(2.dp, RoundedCornerShape(10.dp))
-                                .clip(RoundedCornerShape(10.dp))
+                                .shadow(2.dp, RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     Brush.verticalGradient(
                                         colors = listOf(Color(0xFF361F2D), Color(0xFF21162B))
@@ -1463,9 +1463,9 @@ private fun CreateBip39SeedStep(
                                 .border(
                                     1.dp,
                                     Brush.horizontalGradient(listOf(VaultGold.copy(alpha = 0.6f), VaultTurquoise.copy(alpha = 0.35f))),
-                                    RoundedCornerShape(10.dp)
+                                    RoundedCornerShape(8.dp)
                                 )
-                                .padding(vertical = 5.5.dp, horizontal = 4.dp),
+                                .padding(vertical = 4.dp, horizontal = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
@@ -1474,13 +1474,13 @@ private fun CreateBip39SeedStep(
                             ) {
                                 Text(
                                     text = "${index + 1}.",
-                                    fontSize = 9.5.sp,
+                                    fontSize = 9.sp,
                                     fontWeight = FontWeight.Black,
                                     color = VaultGold
                                 )
                                 Text(
                                     text = word,
-                                    fontSize = 11.5.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     fontFamily = FontFamily.Monospace,
                                     color = VaultCream,
@@ -1575,9 +1575,9 @@ private fun CreateBip39SeedStep(
             )
             Text(
                 text = if (lang == "RU")
-                    "Я сохранил(а) все 12 слов манускрипта и осознаю личную ответственность"
+                    "Я сохранил(а) все 24 слова манускрипта и осознаю личную ответственность"
                 else
-                    "I have safely preserved all 12 words and accept full responsibility",
+                    "I have safely preserved all 24 words and accept full responsibility",
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = VaultCream,
@@ -1606,7 +1606,7 @@ private fun VerifyBip39SeedStep(
     onFailedVerificationBack: () -> Unit
 ) {
     val words = identity.words
-    val testIndices = remember { listOf(2, 6, 10) }
+    val testIndices = remember { listOf(3, 11, 23) }
     var selectedAnswers by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
     var verificationFailed by remember { mutableStateOf(false) }
     var failedWordNum by remember { mutableStateOf(0) }
@@ -1801,9 +1801,9 @@ private fun VerifyBip39SeedStep(
                     }
                     Text(
                         text = if (lang == "RU")
-                            "Выбрано неверное слово для позиции №$failedWordNum. Подбор слов простым перебором запрещён правилами безопасности. Пожалуйста, вернитесь на шаг назад, сохраните свою сид-фразу и повторно отметьте подтверждение сохранения."
+                            "Выбрано неверное слово для позиции №$failedWordNum. Подбор слов простым перебором запрещён правилами безопасности. Пожалуйста, вернитесь на шаг назад, сохраните свою сид-фразу из 24 слов и повторно отметьте подтверждение сохранения."
                         else
-                            "Incorrect word chosen for position #$failedWordNum. Brute-force guessing is prohibited for security. Please return to the previous screen, verify and safely store your 12-word seed phrase, and re-check the confirmation box.",
+                            "Incorrect word chosen for position #$failedWordNum. Brute-force guessing is prohibited for security. Please return to the previous screen, verify and safely store your 24-word seed phrase, and re-check the confirmation box.",
                         fontSize = 11.sp,
                         color = VaultCream.copy(alpha = 0.95f),
                         textAlign = TextAlign.Center,
@@ -1885,7 +1885,7 @@ private fun RestoreFromSeedStep(
     }
 
     val isValidMnemonic = remember(seedText) {
-        if (wordsList.size == 12) {
+        if (wordsList.size == 24) {
             Bip39Helper.validateMnemonic(context, seedText)
         } else false
     }
@@ -1922,9 +1922,9 @@ private fun RestoreFromSeedStep(
 
         Text(
             text = if (lang == "RU")
-                "Введите 12 слов вашего BIP-39 манускрипта через пробел:"
+                "Введите 24 слова вашего BIP-39 манускрипта через пробел:"
             else
-                "Enter the 12 words of your BIP-39 manuscript separated by spaces:",
+                "Enter the 24 words of your BIP-39 manuscript separated by spaces:",
             fontSize = 11.5.sp,
             color = VaultWarmSubtext,
             lineHeight = 15.sp
@@ -1933,7 +1933,7 @@ private fun RestoreFromSeedStep(
         OutlinedTextField(
             value = seedText,
             onValueChange = onSeedTextChange,
-            label = { Text(if (lang == "RU") "12 слов BIP-39 через пробел" else "12 BIP-39 words", fontSize = 11.sp) },
+            label = { Text(if (lang == "RU") "24 слова BIP-39 через пробел" else "24 BIP-39 words", fontSize = 11.sp) },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = if (isValidMnemonic) VaultEmerald else VaultTurquoise,
                 unfocusedBorderColor = VaultGold.copy(alpha = 0.4f),
@@ -1959,10 +1959,10 @@ private fun RestoreFromSeedStep(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${if (lang == "RU") "Слов" else "Words"}: ${wordsList.size} / 12",
+                text = "${if (lang == "RU") "Слов" else "Words"}: ${wordsList.size} / 24",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (wordsList.size == 12) VaultEmerald else VaultGoldLight
+                color = if (wordsList.size == 24) VaultEmerald else VaultGoldLight
             )
 
             if (isValidMnemonic) {
@@ -1972,7 +1972,7 @@ private fun RestoreFromSeedStep(
                     fontWeight = FontWeight.Black,
                     color = VaultEmerald
                 )
-            } else if (wordsList.size == 12) {
+            } else if (wordsList.size == 24) {
                 Text(
                     text = if (lang == "RU") "⚠️ Неверная контрольная сумма" else "⚠️ Checksum mismatch",
                     fontSize = 11.sp,

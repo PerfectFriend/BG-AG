@@ -23,7 +23,7 @@ object PdfPassportGenerator {
 
     /**
      * Generates a high-quality PDF passport document containing the user's
-     * BIP-39 12-word seed phrase, derived identity fingerprint, and QR code.
+     * BIP-39 24-word seed phrase, derived identity fingerprint, and QR code.
      */
     fun generatePassportPdf(
         context: Context,
@@ -112,55 +112,55 @@ object PdfPassportGenerator {
             paint.typeface = Typeface.DEFAULT
             canvas.drawText("MASTER PUBKEY: ${identity.masterPublicKeyHex}", 55f, 198f, paint)
 
-            // 5. Section: 12-Word BIP-39 Seed Phrase
+            // 5. Section: 24-Word BIP-39 Seed Phrase
             paint.color = textWhite
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             paint.textSize = 14f
-            canvas.drawText("MASTER RECOVERY SEED PHRASE (12 WORDS)", 40f, 245f, paint)
+            canvas.drawText("MASTER RECOVERY SEED PHRASE (24 WORDS)", 40f, 245f, paint)
 
             paint.color = textMuted
             paint.typeface = Typeface.DEFAULT
             paint.textSize = 9.5f
-            canvas.drawText("Words must be kept in exact sequential order (1 to 12) to derive your private vault keys.", 40f, 262f, paint)
+            canvas.drawText("Words must be kept in exact sequential order (1 to 24) to derive your private vault keys.", 40f, 262f, paint)
 
-            // Draw 12 words in a 3-column x 4-row grid
+            // Draw 24 words in a 4-column x 6-row grid
             val startX = 40f
             val startY = 278f
-            val colWidth = 152f
-            val rowHeight = 44f
-            val spacingX = 10f
-            val spacingY = 10f
+            val colWidth = 120f
+            val rowHeight = 32f
+            val spacingX = 11.5f
+            val spacingY = 6f
 
-            for (i in 0 until 12) {
-                val col = i % 3
-                val row = i / 3
+            for (i in 0 until 24) {
+                val col = i % 4
+                val row = i / 4
                 val x = startX + col * (colWidth + spacingX)
                 val y = startY + row * (rowHeight + spacingY)
 
                 val wordRect = RectF(x, y, x + colWidth, y + rowHeight)
                 paint.color = cardBg
                 paint.style = Paint.Style.FILL
-                canvas.drawRoundRect(wordRect, 8f, 8f, paint)
+                canvas.drawRoundRect(wordRect, 6f, 6f, paint)
 
                 paint.color = cardBorder
                 paint.style = Paint.Style.STROKE
                 paint.strokeWidth = 1f
-                canvas.drawRoundRect(wordRect, 8f, 8f, paint)
+                canvas.drawRoundRect(wordRect, 6f, 6f, paint)
 
                 // Word number badge
                 paint.style = Paint.Style.FILL
                 paint.color = neonGreen
                 paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                paint.textSize = 10f
+                paint.textSize = 9.5f
                 val numStr = String.format(Locale.US, "#%02d", i + 1)
-                canvas.drawText(numStr, x + 12f, y + 26f, paint)
+                canvas.drawText(numStr, x + 8f, y + 20f, paint)
 
                 // Word text
                 paint.color = textWhite
                 paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                paint.textSize = 13f
+                paint.textSize = 11f
                 val word = identity.words.getOrElse(i) { "" }
-                canvas.drawText(word, x + 46f, y + 27f, paint)
+                canvas.drawText(word, x + 38f, y + 20f, paint)
             }
 
             // 6. Security Warning Banner
@@ -184,7 +184,7 @@ object PdfPassportGenerator {
             paint.color = textWhite
             paint.typeface = Typeface.DEFAULT
             paint.textSize = 8.5f
-            canvas.drawText("1. Anyone with access to these 12 words can access your cryptocontainer and cryptographic identity.", 55f, warnY + 40f, paint)
+            canvas.drawText("1. Anyone with access to these 24 words can access your cryptocontainer and cryptographic identity.", 55f, warnY + 40f, paint)
             canvas.drawText("2. Store this printed certificate in a secure physical location (safe, vault).", 55f, warnY + 54f, paint)
             canvas.drawText("3. Never photograph, email, or transmit these words over unencrypted or public networks.", 55f, warnY + 68f, paint)
 
@@ -210,7 +210,7 @@ object PdfPassportGenerator {
             paint.typeface = Typeface.DEFAULT
             paint.textSize = 9f
             canvas.drawText("Never digitize or take screenshots of this recovery phrase.", 55f, advisoryBlockY + 50f, paint)
-            canvas.drawText("Write these 12 words down on physical paper or stamp into metal.", 55f, advisoryBlockY + 65f, paint)
+            canvas.drawText("Write these 24 words down on physical paper or stamp into metal.", 55f, advisoryBlockY + 65f, paint)
             canvas.drawText("Store in a safe physical location. Anyone with access to these words can restore your account.", 55f, advisoryBlockY + 80f, paint)
 
             paint.color = neonGreen

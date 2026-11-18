@@ -232,8 +232,8 @@ class SecurityPinDelegate(
         if (!Bip39Helper.validateMnemonic(context, normalized)) {
             return Pair(
                 false,
-                if (lang == "RU") "Неверная seed-фраза: проверьте 12 слов и контрольную сумму BIP-39"
-                else "Invalid seed phrase: check 12 words and checksum"
+                if (lang == "RU") "Неверная seed-фраза: проверьте 24 слова и контрольную сумму BIP-39"
+                else "Invalid seed phrase: check 24 words and checksum"
             )
         }
 

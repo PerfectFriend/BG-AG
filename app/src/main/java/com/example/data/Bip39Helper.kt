@@ -15,12 +15,20 @@ object Bip39Helper {
     private var cachedWordlist: List<String>? = null
 
     /**
-     * Loads the BIP-39 English wordlist from assets.
+     * Loads the BIP-39 English wordlist from assets or file fallback for JVM unit tests.
      */
-    fun loadWordlist(context: Context): List<String> {
+    fun loadWordlist(context: Context? = null): List<String> {
         cachedWordlist?.let { return it }
+        val stream = try {
+            context?.assets?.open("bip39_english.txt")
+        } catch (_: Exception) { null }
+            ?: java.io.File("src/main/assets/bip39_english.txt").takeIf { it.exists() }?.inputStream()
+            ?: java.io.File("app/src/main/assets/bip39_english.txt").takeIf { it.exists() }?.inputStream()
+            ?: Bip39Helper::class.java.classLoader?.getResourceAsStream("bip39_english.txt")
+            ?: Bip39Helper::class.java.classLoader?.getResourceAsStream("assets/bip39_english.txt")
+
         return try {
-            context.assets.open("bip39_english.txt").bufferedReader().use { reader ->
+            stream?.bufferedReader()?.use { reader ->
                 val words = reader.readLines().map { it.trim() }.filter { it.isNotEmpty() }
                 if (words.size == 2048) {
                     cachedWordlist = words
@@ -28,7 +36,7 @@ object Bip39Helper {
                 } else {
                     emptyList()
                 }
-            }
+            } ?: emptyList()
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -36,9 +44,10 @@ object Bip39Helper {
     }
 
     /**
-     * Generates a random 12-word seed phrase.
+     * Generates a random 24-word seed phrase according to BIP-39.
+     * Uses 256 bits (32 bytes) of entropy + 8 bits checksum = 264 bits = 24 words.
      */
-    fun generateMnemonic(context: Context): String {
+    fun generateMnemonic(context: Context? = null): String {
         val wordlist = loadWordlist(context)
         if (wordlist.size != 2048) {
             // Returning a fixed phrase here would hand every affected install the same
@@ -48,32 +57,32 @@ object Bip39Helper {
             )
         }
 
-        val entropy = ByteArray(16)
+        val entropy = ByteArray(32)
         SecureRandom().nextBytes(entropy)
 
         // Compute SHA-256 for checksum
         val md = MessageDigest.getInstance("SHA-256")
         val hash = md.digest(entropy)
         
-        // 128 / 32 = 4 bits checksum
+        // 256 / 32 = 8 bits checksum (first full byte of SHA-256)
         val checksumByte = hash[0]
         
-        // Convert entropy bytes and 4-bit checksum to a continuous list of bits (132 bits)
-        val bits = BooleanArray(132)
+        // Convert entropy bytes and 8-bit checksum to a continuous list of bits (264 bits)
+        val bits = BooleanArray(264)
         var bitIndex = 0
         for (b in entropy) {
             for (i in 7 downTo 0) {
                 bits[bitIndex++] = ((b.toInt() ushr i) and 1) == 1
             }
         }
-        // Append 4 bits of checksum (from the first byte of SHA-256)
-        for (i in 7 downTo 4) {
+        // Append 8 bits of checksum (from the first byte of SHA-256)
+        for (i in 7 downTo 0) {
             bits[bitIndex++] = ((checksumByte.toInt() ushr i) and 1) == 1
         }
 
-        // Convert 132 bits to 12 words (12 * 11 bits)
+        // Convert 264 bits to 24 words (24 * 11 bits)
         val mnemonicWords = mutableListOf<String>()
-        for (w in 0 until 12) {
+        for (w in 0 until 24) {
             var index = 0
             for (i in 0 until 11) {
                 index = index shl 1
@@ -88,14 +97,14 @@ object Bip39Helper {
     }
 
     /**
-     * Validates a 12-word seed phrase.
+     * Validates a BIP-39 seed phrase (supporting standard 24-word and 12-word mnemonics).
      */
-    fun validateMnemonic(context: Context, mnemonic: String): Boolean {
+    fun validateMnemonic(context: Context? = null, mnemonic: String): Boolean {
         val wordlist = loadWordlist(context)
         if (wordlist.size != 2048) return false
 
-        val words = mnemonic.trim().lowercase().split("\\s+".toRegex())
-        if (words.size != 12) return false
+        val words = mnemonic.trim().lowercase().split("\\s+".toRegex()).filter { it.isNotBlank() }
+        if (words.size != 24 && words.size != 12) return false
 
         // 1. Verify words exist in wordlist
         for (w in words) {
@@ -104,43 +113,83 @@ object Bip39Helper {
 
         // 2. Perform checksum verification
         try {
-            val bits = BooleanArray(132)
-            for (w in 0 until 12) {
-                val index = wordlist.indexOf(words[w])
-                if (index < 0) return false
-                for (i in 10 downTo 0) {
-                    bits[w * 11 + (10 - i)] = ((index ushr i) and 1) == 1
-                }
-            }
-
-            // Extract entropy bytes (16 bytes = 128 bits)
-            val entropy = ByteArray(16)
-            for (currByte in 0 until 16) {
-                var value = 0
-                for (b in 0 until 8) {
-                    value = value shl 1
-                    if (bits[currByte * 8 + b]) {
-                        value = value or 1
+            if (words.size == 24) {
+                val bits = BooleanArray(264)
+                for (w in 0 until 24) {
+                    val index = wordlist.indexOf(words[w])
+                    if (index < 0) return false
+                    for (i in 10 downTo 0) {
+                        bits[w * 11 + (10 - i)] = ((index ushr i) and 1) == 1
                     }
                 }
-                entropy[currByte] = value.toByte()
-            }
 
-            // Extract checksum (last 4 bits)
-            var expectedChecksumVal = 0
-            for (b in 128 until 132) {
-                expectedChecksumVal = expectedChecksumVal shl 1
-                if (bits[b]) {
-                    expectedChecksumVal = expectedChecksumVal or 1
+                // Extract entropy bytes (32 bytes = 256 bits)
+                val entropy = ByteArray(32)
+                for (currByte in 0 until 32) {
+                    var value = 0
+                    for (b in 0 until 8) {
+                        value = value shl 1
+                        if (bits[currByte * 8 + b]) {
+                            value = value or 1
+                        }
+                    }
+                    entropy[currByte] = value.toByte()
                 }
+
+                // Extract checksum (last 8 bits)
+                var expectedChecksumVal = 0
+                for (b in 256 until 264) {
+                    expectedChecksumVal = expectedChecksumVal shl 1
+                    if (bits[b]) {
+                        expectedChecksumVal = expectedChecksumVal or 1
+                    }
+                }
+
+                // Compute actual checksum from entropy (first 8 bits of SHA-256)
+                val md = MessageDigest.getInstance("SHA-256")
+                val hash = md.digest(entropy)
+                val actualChecksumVal = hash[0].toInt() and 0xFF
+
+                return expectedChecksumVal == actualChecksumVal
+            } else {
+                // 12 words fallback
+                val bits = BooleanArray(132)
+                for (w in 0 until 12) {
+                    val index = wordlist.indexOf(words[w])
+                    if (index < 0) return false
+                    for (i in 10 downTo 0) {
+                        bits[w * 11 + (10 - i)] = ((index ushr i) and 1) == 1
+                    }
+                }
+
+                // Extract entropy bytes (16 bytes = 128 bits)
+                val entropy = ByteArray(16)
+                for (currByte in 0 until 16) {
+                    var value = 0
+                    for (b in 0 until 8) {
+                        value = value shl 1
+                        if (bits[currByte * 8 + b]) {
+                            value = value or 1
+                        }
+                    }
+                    entropy[currByte] = value.toByte()
+                }
+
+                // Extract checksum (last 4 bits)
+                var expectedChecksumVal = 0
+                for (b in 128 until 132) {
+                    expectedChecksumVal = expectedChecksumVal shl 1
+                    if (bits[b]) {
+                        expectedChecksumVal = expectedChecksumVal or 1
+                    }
+                }
+
+                val md = MessageDigest.getInstance("SHA-256")
+                val hash = md.digest(entropy)
+                val actualChecksumVal = (hash[0].toInt() ushr 4) and 0x0F
+
+                return expectedChecksumVal == actualChecksumVal
             }
-
-            // Compute actual checksum from entropy
-            val md = MessageDigest.getInstance("SHA-256")
-            val hash = md.digest(entropy)
-            val actualChecksumVal = (hash[0].toInt() ushr 4) and 0x0F
-
-            return expectedChecksumVal == actualChecksumVal
         } catch (e: Exception) {
             e.printStackTrace()
             return false
@@ -148,7 +197,7 @@ object Bip39Helper {
     }
 
     /**
-     * Converts a 12-word BIP-39 mnemonic into a 512-bit (64-byte) binary seed
+     * Converts a BIP-39 mnemonic (24 words) into a 512-bit (64-byte) binary seed
      * using standard PBKDF2 with HMAC-SHA512 (2048 iterations, salt "mnemonic" + passphrase).
      */
     fun mnemonicToSeed(mnemonic: String, passphrase: String = ""): ByteArray {
@@ -159,7 +208,7 @@ object Bip39Helper {
     }
 
     /**
-     * Derives full cryptographic identity keys and fingerprints from the 12-word seed phrase.
+     * Derives full cryptographic identity keys and fingerprints from the 24-word seed phrase.
      * Uses HKDF-SHA256 domain separation to derive:
      * - Ed25519 identity keypair (for signatures / auth)
      * - X25519 DH keypair (for key exchange / ratchet)
